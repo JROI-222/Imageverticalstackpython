@@ -1,0 +1,42 @@
+from PIL import Image
+import os
+import re
+import random
+import string
+
+# Set the directory where your images are stored
+directory = r"[DIRECTORYHERE]"
+
+# Get a list of all the image files in the directory
+files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+
+# Sort the list of files by their numerical label (assuming the label is at the beginning of the file name)
+files.sort(key=lambda x: int(x.split('-')[0] if '-' in x else x.split('.')[0]))
+images = [Image.open(os.path.join(directory, f)) for f in files]
+images = images[::-1]
+
+# Load each image into a list of PIL Image objects
+images = []
+for f in files:
+    image = Image.open(os.path.join(directory, f))
+    images.append(image)
+
+# Determine the size of the output image
+width, height = images[0].size
+total_height = height * len(images)
+
+# Create a new image to hold the stacked images
+stack = Image.new(mode='RGB', size=(width, total_height))
+
+# Paste each image into the stack image, one below the other
+y_offset = 0
+for image in images:
+    stack.paste(image, (0, y_offset))
+    y_offset += height
+
+# Generate a random file name for the output file
+random_name = ''.join(random.choices(string.ascii_letters + string.digits, k=16)) + '.png'
+output_path = os.path.join(directory, random_name)
+
+# Save the stacked image with the random file name
+stack.save(output_path)
