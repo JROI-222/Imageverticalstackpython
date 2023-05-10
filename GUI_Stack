@@ -1,0 +1,60 @@
+from PIL import Image
+import os
+import re
+import random
+import string
+import tkinter as tk
+from tkinter import filedialog
+
+
+def stack_images(directory):
+    # Get a list of all the image files in the directory
+    files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+
+    # Sort the list of files by their numerical label (assuming the label is at the beginning of the file name)
+    files.sort(key=lambda x: int(x.split('-')[0] if '-' in x else x.split('.')[0]), reverse=True)
+    images = [Image.open(os.path.join(directory, f)) for f in files]
+    images = images[::-1]
+
+    # Determine the size of the output image
+    width, height = zip(*(i.size for i in images))
+    total_width = max(width)
+    total_height = sum(height)
+
+    # Create a new image to hold the stacked images
+    stack = Image.new(mode='RGB', size=(total_width, total_height))
+
+    # Paste each image into the stack image, one below the other
+    y_offset = total_height
+    for image in images:
+        x_offset = (total_width - image.size[0]) // 2
+        y_offset -= image.size[1]
+        stack.paste(image, (x_offset, y_offset))
+
+    # Generate a random file name for the output file
+    random_name = ''.join(random.choices(string.ascii_letters + string.digits, k=16)) + '.png'
+    output_path = os.path.join(directory, random_name)
+
+    # Save the stacked image with the random file name
+    stack.save(output_path)
+
+    # Show message box with the output file path
+    #msg = f"Stacked image saved to:\n{output_path}"
+    #tk.messagebox.showinfo(title="Complete", message=msg)
+
+
+def browse_directory():
+    directory = filedialog.askdirectory()
+    if directory:
+        stack_images(directory)
+
+
+# Create a Tkinter window
+root = tk.Tk()
+root.title("Image Stacker")
+
+# Add a button to browse for a directory
+browse_button = tk.Button(root, text="Browse", command=browse_directory)
+browse_button.pack(pady=10)
+
+root.mainloop()
